@@ -18,6 +18,14 @@ const Sidebar = ({ isMenuOpen, isGenerating, setIsGenerating, setProject, projec
 
   const handleRollBack = async (versionId: string) => {
 
+  };
+
+  const handleRevisions  = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+    setIsGenerating(true)
+    setTimeout(()=> {
+      setIsGenerating(false)
+    }, 3000)
   }
 
   useEffect(() => {
@@ -74,7 +82,7 @@ const Sidebar = ({ isMenuOpen, isGenerating, setIsGenerating, setProject, projec
                     <div className='text-xs font-medium'>
                       code updated <br />
                       <span className='text-gray-500 text-xs font-normal'>
-                        {new Date(ver.timestamp).toLocaleDateString()}
+                        {new Date(ver.timestamp).toLocaleString()}
                       </span>
                     </div>
 
@@ -87,13 +95,15 @@ const Sidebar = ({ isMenuOpen, isGenerating, setIsGenerating, setProject, projec
                         bg-indigo-500 hover:bg-indigo-600
                         text-white'>Roll back to this version</button>
                       )}
+
+                      <Link target='_blank' to={`/preview/${project.id}/
+                    ${ver.id}`}>
+                        <EyeIcon className='size-6 p-1 bg-gray-700
+                    hover:bg-indigo-500 transition-colors rounded'/>
+                      </Link>
                     </div>
 
-                    <Link target='_blank' to={`/preview/${project.id}/
-                    ${ver.id}`}>
-                      <EyeIcon className='size-6 p-1 bg-gray-700
-                    hover:bg-indigo-500 transition-colors rounded'/>
-                    </Link>
+
                   </div>
                 )
               }
@@ -122,16 +132,17 @@ const Sidebar = ({ isMenuOpen, isGenerating, setIsGenerating, setProject, projec
         </div>
 
         {/**input container */}
-        <form className='m-3 relative' action="">
+        <form className='m-3 relative' onSubmit={handleRevisions}>
           <div className='flex items-center gap-2'>
             <textarea onChange={(e) => setInput(e.target.value)} value={input}
-              rows={4} placeholder='Decsribe your website or request
-            changes...' className='flex-1 p-3 rounded-xl resize-none text-sm
+              rows={4} placeholder='Decsribe your website or request changes...' className='flex-1 p-3 rounded-xl resize-none text-sm
             outline-none ring ring-gray-700 focus:ring-indigo-500 bg-gray-800
             text-gray-100 placeholder-gray-400 transition-all'
               disabled={isGenerating} />
 
-            <button>
+            <button disabled={isGenerating || !input.trim()} className='absolute bottom-2.5 right-2.5 rounded-full
+            bg-linear-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600
+            hover:to-indigo-700 text-white transition-colors disabled:opacity-60'>
               {isGenerating
                 ? <Loader2Icon className='size-7 p-1.5 animate-spin text-white' />
                 : <SendIcon className='size-7 p-1.5 text-white' />}
