@@ -7,23 +7,24 @@ const trustedOrigins = process.env.TRUSTED_URL?.split(',') || [];
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
-        provider: "postgresql", 
+        provider: "postgresql",
     }),
-    emailAndPassword: { 
-    enabled: true, 
-   },
-   trustedOrigins,
-   baseUrl: process.env.BETTER_AUTH_URL!,
-   secret: process.env.BETTER_AUTH_SECRET!,
-   advanced: {
-    cookies: {
-        session_token: {
-            name: 'auth_session',
-            attributes: {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+    emailAndPassword: {
+        enabled: true,
+    },
+    trustedOrigins,
+    baseUrl: process.env.BETTER_AUTH_URL!,
+    secret: process.env.BETTER_AUTH_SECRET!,
+    advanced: {
+        cookies: {
+            session_token: {
+                name: 'auth_session',
+                attributes: {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'none',
+                }
+            }
         }
     }
-   }
 });

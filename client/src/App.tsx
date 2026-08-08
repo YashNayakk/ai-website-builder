@@ -8,6 +8,7 @@ import Projects from './pages/Projects';
 import View from './pages/View';
 import Navbar from './components/Navbar';
 import { Toaster } from "@/components/ui/toast"
+import AuthPage from './pages/auth/AuthPage';
 
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/projects/:projectId" element={<Projects />} />
         <Route path="/view/:projectId" element={<View />} />
+        <Route path="/auth/:pathname" element={<AuthPage />} />
       </Routes>
     </div>
   )
