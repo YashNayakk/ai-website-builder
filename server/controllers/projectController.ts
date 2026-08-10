@@ -2,70 +2,52 @@ import type { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import openai from '../configs/openai.js';
 
-//user credit
-export const getUserCredits = async (req: Request, res: Response) => {
-    try {
-        const userId = req.userId;
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId }
-        })
-        res.json({ credits: user?.credits })
-    } catch (error: any) {
-        console.log(error.code || error.message);
-        res.status(500).json({ message: error.message });
-    }
-}
-
-export const createUserProject = async (req: Request, res: Response) => {
+//conroller for project revision
+export const makeRevision = async (req: Request, res: Response) => {
     const userId = req.userId;
     try {
-        const { initial_prompt } = req.body;
-
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
+        const {projectId} = req.params;
+        const {message} = req.body;
 
         const user = await prisma.user.findUnique({
             where: { id: userId }
         })
-        if (user && user.credits < 5) {
+
+        if (!userId || !user) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        if(user.credits < 5){
             return res.status(403).json({ message: 'add credits to create more projects' })
         }
 
-        //create a new project
-        const project = await prisma.websiteProject.create({
-            data: {
-                name: initial_prompt.length > 50 ? initial_prompt.substring(0, 47)
-                    + '...' : initial_prompt,
-                initial_prompt,
-                userId
-            }
+        if(!message || message.trim() === ''){
+            return res.status(400).json({ message: 'please enter a valid prompt' });
+        }
+
+        const currentProject = await prisma.websiteProject.findUnique({
+            where: { id: projectId, userId },
+            include: { versions: true }
         })
 
-        await prisma.user.update({
-            where: { id: userId },
-            data: { totalCreation: { increment: 1 } }
-        })
+        if(!currentProject){
+            return res.status(404).json({ message: 'Project not found' });
+        }
 
         await prisma.conversation.create({
             data: {
                 role: 'user',
-                content: initial_prompt,
-                projectId: project.id
+                content: message,
+                projectId
             }
         })
 
         await prisma.user.update({
             where: { id: userId },
-            data: { credits: { decrement: 5 } }
+            data: {credits: { decrement: 5 }}
         })
-        res.json({ projectId: project.id })
 
-        //enchance user prompt
+        //enhance the project with the new message
         const promptEnhanceRes = await openai.chat.completions.create({
             model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
             messages: [
@@ -88,7 +70,7 @@ export const createUserProject = async (req: Request, res: Response) => {
 
                 {
                     role: 'user',
-                    content: initial_prompt
+                    content: `user's request: "&{message}"`
                 }
             ]
         })
@@ -99,7 +81,7 @@ export const createUserProject = async (req: Request, res: Response) => {
             data: {
                 role: 'assistant',
                 content: `I've enhanced your prompt to: ${enhancedPrompt}`,
-                projectId: project.id
+                projectId
             }
         })
 
@@ -107,7 +89,7 @@ export const createUserProject = async (req: Request, res: Response) => {
             data: {
                 role: 'assistant',
                 content: 'Now genrating your website ...',
-                projectId: project.id
+                projectId
             }
         })
 
@@ -145,7 +127,8 @@ export const createUserProject = async (req: Request, res: Response) => {
                 },
                 {
                     role: 'user',
-                    content: enhancedPrompt || ''
+                    content: `here is the current website code: "${currentProject.current_code}" 
+                    and the wants this changes: "${enhancedPrompt}"`
                 }
             ]
         })
@@ -158,21 +141,21 @@ export const createUserProject = async (req: Request, res: Response) => {
                 code: code.replace(/```[a-z]*\n?/gi, '')
                     .replace(/```$/g, '')
                     .trim(),
-                description: 'Initial version',
-                projectId: project.id
+                description: 'Changes made',
+                projectId
             }
         })
 
         await prisma.conversation.create({
             data: {
                 role: 'assistant',
-                content: "I've created your website! you can now preview it and request any changes",
-                projectId: project.id
+                content: "I've made this changes to your website! you can now preview it",
+                projectId
             }
         })
 
         await prisma.websiteProject.update({
-            where: { id: project.id },
+            where: { id: projectId },
             data: {
                 current_code: code.replace(/```[a-z]*\n?/gi, '')
                     .replace(/```$/g, '')
@@ -181,93 +164,81 @@ export const createUserProject = async (req: Request, res: Response) => {
             }
         })
 
+        res.json({ message: "Changes made successfully" })
     } catch (error: any) {
         await prisma.user.update({
             where: { id: userId },
             data: { credits: { increment: 5 } }
         })
-        console.log(error);
-        res.status(500).json({ message: error.message });
-    }
-}
-
-//controller fun to get a single user project
-export const getUserProject = async (req: Request, res: Response) => {
-    try {
-        const userId = req.userId;
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-        
-        const {projectId} = req.params;
-
-        const project = await prisma.websiteProject.findUnique({
-            where: {id: projectId, userId},
-            include: {
-                conversation:{
-                    orderBy: {timestamp: 'asc'}
-                }
-            }
-        })
-        res.json({ project })
-    } catch (error: any) {
         console.log(error.code || error.message);
         res.status(500).json({ message: error.message });
     }
 }
 
-//controller fun to get all users projects
-export const getUserProjects = async (req: Request, res: Response) => {
+//controler for rollback to specific version
+export const rollbackVersion = async (req: Request, res: Response) => {
     try {
         const userId = req.userId;
         if (!userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const projects = await prisma.websiteProject.findMany({
-            where: {userId},
-            orderBy: {updatedAt: 'desc'}
-        })
-        res.json({ projects })
-    } catch (error: any) {
-        console.log(error.code || error.message);
-        res.status(500).json({ message: error.message });
-    }
-}
-
-export const togglePublish = async (req: Request, res: Response) => {
-    try {
-        const userId = req.userId;
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-
-        const {projectId} = req.params;
-
+        const {projectId, versionId} = req.params;
         const project = await prisma.websiteProject.findUnique({
-            where: {id: projectId, userId},
-            
+            where: { id: projectId, userId },
+            include: { versions: true }
         })
 
-        if(!project) {
-            return res.status(404).json({message: 'Project not found'});
+        if(!project){
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const version = project.versions.find((version: any) => version.id === versionId);
+        if(!version){
+            return res.status(404).json({ message: 'Version not found' });
         }
 
         await prisma.websiteProject.update({
-            where: {id: projectId},
-            data:{ isPublished: !project.isPublished}
+            where: { id: projectId },
+            data: {
+                current_code: version.code,
+                current_version_index: version.id
+            }
         })
 
-        res.json({ message: project.isPublished ? 'Project Unpublished' : 
-            'Project Publish Successfully' })
+        await prisma.conversation.create({
+            data: {
+                role: 'assistant',
+                content: "I've rolled back your website to selected version. You can now preview it",
+                projectId
+            }
+        })
 
+        res.json({ message: "Rolled back to selected version successfully" })
     } catch (error: any) {
         console.log(error.code || error.message);
         res.status(500).json({ message: error.message });
-    }
+    } 
+    
 }
 
-//controler fun to purchase credits
-export const purchaseCredits = async (req: Request, res: Response)=>{
+//contoller for deleting a project
+export const deleteProject = async (req: Request, res: Response) => {
+    try {
+        const userId = req.userId;
+        const {projectId} = req.params;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        await prisma.websiteProject.delete({
+            where: { id: projectId, userId },
+        })
+
+        res.json({ message: "Project deleted successfully" })
+    } catch (error: any) {
+        console.log(error.code || error.message);
+        res.status(500).json({ message: error.message });
+    } 
     
 }
