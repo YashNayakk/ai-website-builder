@@ -11,7 +11,7 @@ const port = 3000;
 
 const corsOptions = {
     origin: process.env.TRUSTED_URL?.split(',') || [],
-    Credential: true,
+    credentials: true,
 }
 
 //midleware

@@ -1,10 +1,14 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { assets } from '../assets/assets';
+import { authClient } from '@/lib/auth-client';
+import { UserButton } from "@/components/auth/user/user-button"
 
 const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
+
+    const {data: session} = authClient.useSession();
     return (
         <>
             <nav className='z-50 flex items-center justify-between text-white px-4 py-4 xl:px-32 lg:px-24 md:px-16 w-full backdrop:backdrop-blur border-b border-slate-800 '>
@@ -20,10 +24,15 @@ const Navbar = () => {
                 </div>
 
                 <div className='flex items-center gap-3'>
-                    <button onClick={() => navigate('/auth/signin')}
+                    {!session?.user ? (
+                       <button onClick={() => navigate('/auth/sign-in')}
                         className='px-6 py-1.5 max-sm:text-sm bg-indigo-600 active:scale-95 hover:bg-indigo-700 transition rounded'>
                         Get Started
                     </button>
+                    ) : (
+                      <UserButton size='icon'/>
+                    )}
+                    
                     <button id="open-menu" className="md:hidden active:scale-90 transition" onClick={() => setMenuOpen(true)} >
                         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4 5h16" /><path d="M4 12h16" /><path d="M4 19h16" /></svg>

@@ -7,7 +7,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider
     authClient={authClient}
-    navigate={navigate}
+    navigate={({ to }: { to: string }) => navigate(to)}
     Link={(props: any) => <NavLink {...props} to={props.href}/>}
     >
       {children}
