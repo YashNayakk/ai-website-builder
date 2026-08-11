@@ -1,17 +1,35 @@
+import api from '@/configs/axios';
+import { authClient } from '@/lib/auth-client';
 import { Loader2Icon } from 'lucide-react';
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Home = () => {
+  const {data: session} = authClient.useSession();
+  const navigate = useNavigate()
+
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
   const onSubmitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
+    try{
+      if(!session?.user){
+        return toast.error('Please sign in to create a project')
+      }else if( !input.trim()){
+        return toast.error('Please enter a message')
+      }
+      setLoading(true)
+      const {data} = await api.post('/api/user/project', {initial_prompt: input});
+      setLoading(false);
+      navigate(`/project/${data.projectId}`)
 
-    setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-    }, 3000)
+    } catch (error: any) {
+      setLoading(false);
+      toast.error(error?.response?.data?.message || error.message)
+      console.log(error)
+    }
   }
 
   return (
@@ -29,9 +47,9 @@ const Home = () => {
 
       <form onSubmit={onSubmitHandler} className='bg-white/10 w-full max-w-2xl px-4 py-4 rounded-xl mt-10 border border-indigo-600/70 focus-within:ring-2 ring-indigo-500 transition-all'>
         <textarea onChange={e => setInput(e.target.value)} className='bg-transparent outline-none text-gray-300 w-full resize-none '
-          rows={4} required placeholder='describe ur presentation with ai' />
+          rows={4} required placeholder='Describe your presentation with AI' />
         <button className='ml-auto flex items-center bg-linear-to-r from-[#CB52D4] to-indigo-600 gap-2 px-4 py-2 rounded-md text-white '>
-          {!loading ? 'cretae with ai' :
+          {!loading ? 'Create with AI' :
             (<>
               Creating <Loader2Icon className='animate-spin size-4 text-white' />
             </>)}
