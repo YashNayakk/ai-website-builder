@@ -12,7 +12,7 @@ const Home = () => {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
-  const onSubmitHandler = async (e: React.FormEvent) => {
+  const onSubmitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try{
       if(!session?.user){
@@ -22,8 +22,9 @@ const Home = () => {
       }
       setLoading(true)
       const {data} = await api.post('/api/user/project', {initial_prompt: input});
-      setLoading(false);
-      navigate(`/project/${data.projectId}`)
+
+      setLoading(false)
+      navigate(`/projects/${data.projectId}`)
 
     } catch (error: any) {
       setLoading(false);

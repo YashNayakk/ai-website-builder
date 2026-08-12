@@ -2,6 +2,8 @@ import { BotIcon, EyeIcon, Loader2Icon, SendIcon, UserIcon } from 'lucide-react'
 import type { Message, Project, Version } from '../types';
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import api from '@/configs/axios';
 
 interface SidebarProps {
   isMenuOpen: boolean;
@@ -16,16 +18,59 @@ const Sidebar = ({ isMenuOpen, isGenerating, setIsGenerating, setProject, projec
   const [input, setInput] = useState('');
   const messageRef = useRef<HTMLDivElement>(null)
 
+  const fetchProject = async () => {
+    try {
+      const { data } = await api.get(`/api/user/project/${project.id}`);
+      setProject(data.project);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message)
+      console.log(error);
+    }
+
+  }
+
   const handleRollBack = async (versionId: string) => {
+    try {
+      const confirm = window.confirm('Are you sure you want to roll back to this version? ');
+      if(!confirm) return;
+      setIsGenerating(true)
+      const { data } = await api.get(`/api/project/rollback/${project.id}/${versionId}`);
+
+      const {data: data2} = await api.get(`/api/user/project/${project.id}`);
+      toast.success(data.message)
+      setProject(data2.project);
+      setIsGenerating(false)
+    } catch (error: any) {
+      setIsGenerating(false)
+      toast.error(error?.response?.data?.message || error.message)
+      console.log(error);
+    }
 
   };
 
-  const handleRevisions  = async (e: React.SubmitEvent) => {
+  const handleRevisions = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsGenerating(true)
-    setTimeout(()=> {
-      setIsGenerating(false)
-    }, 3000)
+    let interval: number | undefined;
+    try {
+      setIsGenerating(true)
+      interval = setInterval(() => {
+        fetchProject();
+      }, 10000)
+
+      const { data } = await api.post(`/api/project/revision/${project.id}`,
+        { message: input })
+      fetchProject();
+      toast.success(data.message)
+      setInput('')
+      clearInterval(interval)
+      setIsGenerating(false);
+    } catch (error: any) {
+      setIsGenerating(false);
+      toast.error(error?.response?.data?.message || error.message)
+      console.log(error);
+      clearInterval(interval)
+    }
+
   }
 
   useEffect(() => {
@@ -39,7 +84,7 @@ const Sidebar = ({ isMenuOpen, isGenerating, setIsGenerating, setProject, projec
       <div className='flex flex-col h-full'>
         {/**msg container */}
         <div className='flex-1 overflow-y-auto no-scrollbar px-3 flex flex-col gap-4'>
-          {[...project.conversation, ...project.versions]
+          {[...project.conversation, ...project.versions ?? []]
             .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
             .map((message) => {
               const isMessage = 'content' in message;

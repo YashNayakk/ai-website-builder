@@ -7,7 +7,7 @@ import Pricing from './pages/Pricing';
 import Projects from './pages/Projects';
 import View from './pages/View';
 import Navbar from './components/Navbar';
-import { Toaster } from "@/components/ui/toast"
+import { Toaster } from "sonner";
 import AuthPage from './pages/auth/AuthPage';
 import Settings from './pages/Settings';
 

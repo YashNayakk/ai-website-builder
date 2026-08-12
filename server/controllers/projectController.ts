@@ -134,6 +134,21 @@ export const makeRevision = async (req: Request, res: Response) => {
         })
 
         const code = codeGenerationRes.choices[0]?.message.content || '';
+        
+        if(!code){
+            await prisma.conversation.create({
+            data: {
+                role: 'assistant',
+                content: "Unable to generate the code, please try again",
+                projectId
+            }
+        })
+        await prisma.user.update({
+            where: { id: userId },
+            data: { credits: { increment: 5 } }
+        })
+        return;
+        }
 
         //create version for project
         const version = await prisma.version.create({
@@ -252,6 +267,10 @@ export const getProjectPreview = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
+        if (!projectId || Array.isArray(projectId)) {
+            return res.status(400).json({ message: 'Invalid project id' });
+        }
+
         const project = await prisma.websiteProject.findFirst({
             where: { id: projectId, userId },
             include: { versions: true }
@@ -289,6 +308,9 @@ export const getPublishedProjects = async (req: Request, res: Response) => {
 export const getProjectById = async (req: Request, res: Response) => {
     try {
         const {projectId} = req.params;
+        if(!projectId || Array.isArray(projectId)){
+            return res.status(400).json({message: 'Project id is required'})
+        }
 
         const project = await prisma.websiteProject.findFirst({
             where: { id: projectId },

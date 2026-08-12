@@ -1,17 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Project } from '../types';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowBigDownDashIcon, EyeIcon, EyeOffIcon, Fullscreen, FullscreenIcon, Laptop, Loader2Icon, MessageSquareIcon, SaveIcon, SmartphoneIcon, TabletIcon, XIcon } from 'lucide-react';
-import { dummyConversations, dummyProjects, dummyVersion } from '../assets/assets';
+import { ArrowBigDownDashIcon, EyeIcon, EyeOffIcon, FullscreenIcon, Laptop, Loader2Icon, MessageSquareIcon, SaveIcon, SmartphoneIcon, TabletIcon, XIcon } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import ProjectPreview from '../components/ProjectPreview';
+import ProjectPreview, { type ProjectPreviewRef } from '../components/ProjectPreview';
+import api from '@/configs/axios';
+import { toast } from 'sonner';
+import { authClient } from '@/lib/auth-client';
 
 
 const Projects = () => {
   const { projectId } = useParams()
   const navigate = useNavigate()
+  const {data: session, isPending} = authClient.useSession()
 
-  const [project, setProject] = useState<Project>(null)
+  const [project, setProject] = useState<Project | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [isGenerating, setIsGenerating] = useState(true)
@@ -20,18 +23,26 @@ const Projects = () => {
   const [device, setDevice] = useState<'phone' | 'tablet' | 'desktop'>('desktop')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const previewRef = useRef<Project>(null)
+  const previewRef = useRef<ProjectPreviewRef>(null)
 
   const fetchProject = async () => {
-    const project = dummyProjects.find(project => project.id === projectId)
+    try {
+      const {data} = await api(`/api/user/project/${projectId}`);
 
-    setTimeout(() => {
-      if (project) {
-        setProject({ ...project, conversation: dummyConversations, versions: dummyVersion })
-        setIsGenerating(project.current_code ? false : true)
+      if(!data.project){
+        toast.error('Project not found')
         setLoading(false)
+        return;
       }
-    }, 2000)
+      setProject(data.project);
+      setIsGenerating(data.project.current_code ? false : true)
+      setLoading(false)
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message);
+      console.log(error);
+      setLoading(false)
+      
+    }
   }
 
   const saveProject = async () => {
@@ -59,14 +70,26 @@ const Projects = () => {
 
   };
 
+  useEffect(()=> {
+    if(session?.user){
+      fetchProject();
+    }else if(!isPending && !session?.user){
+      navigate('/')
+      toast("Please login to view your projects")
+    }  
+  }, [session?.user, isPending])
+
   useEffect(() => {
-    fetchProject()
-  })
+    if(project && !project.current_code){
+      const intervalId = setInterval(fetchProject, 10000);
+      return ()=> clearInterval(intervalId)
+    }
+  }, [project])
 
   if (loading) {
     return (
       <>
-        <div className='flex items-center justify-center h-screen'>
+        <div className='flex items-center justify-center h-screen bg-gray-900'>
           <Loader2Icon className='size-7 animate-spin text-violet-200' />
         </div>
       </>
