@@ -1,7 +1,19 @@
 import type { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import openai from '../configs/openai.js';
+import razorpay from '../configs/razorpay.js';
+import crypto from 'crypto';
 
+interface Plan {
+    credits: number;
+    amount: number;
+}
+
+const plans: Record<string, Plan> = {
+    basic: { credits: 100, amount: 5 },
+    pro: { credits: 400, amount: 19 },
+    enterprise: { credits: 1000, amount: 49 },
+}
 //user credit
 export const getUserCredits = async (req: Request, res: Response) => {
     try {
@@ -151,20 +163,20 @@ export const createUserProject = async (req: Request, res: Response) => {
         })
 
         const code = codeGenerationRes.choices[0]?.message.content || '';
-        
-        if(!code){
+
+        if (!code) {
             await prisma.conversation.create({
-            data: {
-                role: 'assistant',
-                content: "Unable to generate the code, please try again",
-                projectId: project.id,
-            }
-        })
-        await prisma.user.update({
-            where: { id: userId },
-            data: { credits: { increment: 5 } }
-        })
-        return;
+                data: {
+                    role: 'assistant',
+                    content: "Unable to generate the code, please try again",
+                    projectId: project.id,
+                }
+            })
+            await prisma.user.update({
+                where: { id: userId },
+                data: { credits: { increment: 5 } }
+            })
+            return;
         }
 
         //create version for project
@@ -198,7 +210,7 @@ export const createUserProject = async (req: Request, res: Response) => {
 
     } catch (error: any) {
         await prisma.user.update({
-            where: { id: userId },
+            where: { id: userId! },
             data: { credits: { increment: 5 } }
         })
         console.log(error);
@@ -213,14 +225,14 @@ export const getUserProject = async (req: Request, res: Response) => {
         if (!userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        
-        const {projectId} = req.params;
+
+        const { projectId } = req.params;
 
         const project = await prisma.websiteProject.findUnique({
-            where: {id: projectId, userId},
+            where: { id: projectId, userId },
             include: {
-                conversation:{
-                    orderBy: {timestamp: 'asc'}
+                conversation: {
+                    orderBy: { timestamp: 'asc' }
                 },
                 versions: true
             }
@@ -241,8 +253,8 @@ export const getUserProjects = async (req: Request, res: Response) => {
         }
 
         const projects = await prisma.websiteProject.findMany({
-            where: {userId},
-            orderBy: {updatedAt: 'desc'}
+            where: { userId },
+            orderBy: { updatedAt: 'desc' }
         })
         res.json({ projects })
     } catch (error: any) {
@@ -258,24 +270,26 @@ export const togglePublish = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const {projectId} = req.params;
+        const { projectId } = req.params;
 
         const project = await prisma.websiteProject.findUnique({
-            where: {id: projectId, userId},
-            
+            where: { id: projectId, userId },
+
         })
 
-        if(!project) {
-            return res.status(404).json({message: 'Project not found'});
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
         }
 
         await prisma.websiteProject.update({
-            where: {id: projectId},
-            data:{ isPublished: !project.isPublished}
+            where: { id: projectId },
+            data: { isPublished: !project.isPublished }
         })
 
-        res.json({ message: project.isPublished ? 'Project Unpublished' : 
-            'Project Publish Successfully' })
+        res.json({
+            message: project.isPublished ? 'Project Unpublished' :
+                'Project Publish Successfully'
+        })
 
     } catch (error: any) {
         console.log(error.code || error.message);
@@ -284,6 +298,107 @@ export const togglePublish = async (req: Request, res: Response) => {
 }
 
 //controler fun to purchase credits
-export const purchaseCredits = async (req: Request, res: Response)=>{
-    
+export const purchaseCredits = async (req: Request, res: Response) => {
+    console.log('purchase route hit')
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const { planId } = req.body as { planId: keyof typeof plans }
+        console.log("planId", planId)
+        const plan = plans[planId]
+        if (!plan) {
+            return res.status(404).json({ message: 'Plan not found' });
+        }
+        console.log("plan", plan)
+        console.log('KEY_ID:', process.env.RAZORPAY_KEY_ID)
+        console.log('KEY_SECRET exists:', !!process.env.RAZORPAY_KEY_SECRET)
+
+        const order = await razorpay.orders.create({
+            amount: Math.round(plan.amount * 100), // paise
+            currency: 'INR',
+            receipt: `receipt_${userId}_${Date.now()}`,
+        });
+        console.log("or:", order)
+
+        await prisma.transaction.create({
+            data: {
+                userId,
+                planId,
+                amount: plan.amount,
+                credits: plan.credits,
+                orderId: order.id,
+                isPaid: false,
+            }
+        })
+
+        res.json({
+            orderId: order.id,
+            amount: order.amount,
+            currency: order.currency,
+            keyId: process.env.RAZORPAY_KEY_ID,
+        });
+    } catch (error: any) {
+        console.log('FULL RAZORPAY ERROR:', JSON.stringify(error, null, 2));
+        res.status(500).json({ message: error?.error?.description || error.message || 'Unknown error' });
+    }
 }
+
+//controller for verifying payment
+export const verifyPayment = async (req: Request, res: Response) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        const orderId = 'order_TPzg7vjfY1o8yE';   // from your last purchase-credits response
+        const paymentId = 'pay_fake_test_123';     // any string, doesn't need to be real for this test
+        const signature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+            .update(`${orderId}|${paymentId}`)
+            .digest('hex');
+
+        console.log("signature:", signature);
+
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        const expectedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+            .digest('hex');
+        console.log("expected:", expectedSignature)
+
+        if (expectedSignature !== razorpay_signature) {
+            return res.status(400).json({ message: 'Payment verification failed' });
+        }
+
+        const transaction = await prisma.transaction.findFirst({
+            where: { orderId: razorpay_order_id, userId }
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        if (transaction.isPaid) {
+            return res.status(400).json({ message: 'Transaction already processed' });
+        }
+
+        await prisma.transaction.update({
+            where: { id: transaction.id },
+            data: { isPaid: true, paymentId: razorpay_payment_id }
+        });
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { credits: { increment: transaction.credits } }
+        });
+
+        res.json({ message: 'Payment verified, credits added' });
+    } catch (error: any) {
+        console.log(error.code || error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
