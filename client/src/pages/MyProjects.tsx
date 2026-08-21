@@ -69,10 +69,10 @@ const MyProjects = () => {
             <div className='flex flex-wrap gap-3.5'>
               {projects.map((project) => (
                 <div onClick={() => navigate(`/projects/${project.id}`)} key={project.id} className='relative group bg-gray-900/60 overflow-hidden border border-gray-700
-                  group-hover:shadow-indigo-700/30 hover:border-indigo-800/80 cursor-pointer w-72 rounded-lg max-sm:mx-auto
-                  transition-all duration-300 shadow-md'>
+                  group-hover:shadow-indigo-700/30 hover:border-indigo-800/80 cursor-pointer w-72
+                  transition-all duration-300 shadow-md flex-col'>
                   {/* preview img*/}
-                  <div className='relative w-full h-40 bg-gray-900 overflow-hidden border-b border-gray-800'>
+                  <div className='relative w-full h-40 shrink-0 bg-gray-900 overflow-hidden border-b border-gray-800'>
                     {project.current_code ? (
                       <iframe
                         srcDoc={project.current_code}
@@ -88,7 +88,7 @@ const MyProjects = () => {
                   </div>
 
                   {/*content */}
-                  <div className='p-4 text-white bg-linear-180 from-transparent group-hover:bg-indigo-950 to-transparent transition-colors'>
+                  <div className='p-4 text-white flex-1 flex flex-col group-hover:bg-indigo-950/40 transition-colors duration-300'>
                     <div className='flex items-start justify-between'>
                       <h1 className='line-clamp-2 font-medium text-lg'>{project.name}</h1>
                       <button className='bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full
@@ -97,7 +97,7 @@ const MyProjects = () => {
                     <p className='line-clamp-2 text-gray-400 mt-1 text-sm'>{project.initial_prompt}</p>
 
                     <div onClick={(e) => e.stopPropagation()}
-                      className='flex justify-between items-center mt-6'>
+                      className='flex justify-between items-center mt-auto pt-6'>
                       <span className='text-xs text-gray-500'>
                         {new Date(project.createdAt).toLocaleDateString()}
                       </span>

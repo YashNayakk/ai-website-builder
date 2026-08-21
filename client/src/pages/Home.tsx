@@ -2,6 +2,7 @@ import api from '@/configs/axios';
 import { authClient } from '@/lib/auth-client';
 import { Loader2Icon } from 'lucide-react';
 import React from 'react'
+import Footer from '../components/Footer';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -57,12 +58,7 @@ const Home = () => {
         </button>
       </form>
 
-      <div className="flex flex-wrap items-center justify-center gap-16 md:gap-20 mx-auto mt-16">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" width="120"/>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" alt="Microsoft" width="120" />
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" alt="Spotify" width="120"/>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon" width="120" />
-      </div>
+      <Footer />
     </section>
   )
 }

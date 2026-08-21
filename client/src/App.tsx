@@ -10,6 +10,10 @@ import Navbar from './components/Navbar';
 import { Toaster } from "sonner";
 import AuthPage from './pages/auth/AuthPage';
 import Settings from './pages/Settings';
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import RefundPolicy from './pages/RefundPolicy'
+import TermsAndConditions from './pages/TermsAndConditions'
+import Contact from './pages/Contact'
 
 
 const App = () => {
@@ -33,6 +37,10 @@ const App = () => {
         <Route path="/view/:projectId" element={<View />} />
         <Route path="/auth/:pathname" element={<AuthPage />} />
         <Route path="/settings/account" element={<Settings />} />
+        <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+        <Route path='/refund-policy' element={<RefundPolicy />} />
+        <Route path='/terms-and-conditions' element={<TermsAndConditions />} />
+        <Route path='/contact' element={<Contact />} />
       </Routes>
     </div>
   )
