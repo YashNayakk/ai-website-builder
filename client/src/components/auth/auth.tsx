@@ -118,7 +118,7 @@ export function Auth({
         ))
     if (!pluginView) continue
 
-    const PluginView = plugin.views?.auth?.[pluginView]
+    const PluginView = (plugin as any).views?.auth?.[pluginView]
     if (!PluginView) continue
 
     return (
@@ -134,8 +134,8 @@ export function Auth({
   //    (password auth is off). Used by `magicLinkPlugin` to render the
   //    magic-link form as the primary passwordless sign-in surface.
   if (authView === "signIn" && !emailAndPassword?.enabled) {
-    const Fallback = plugins.find(
-      (plugin) => plugin.fallbackViews?.auth?.signIn
+    const Fallback = (plugins as any).find(
+      (plugin: any) => (plugin as any).fallbackViews?.auth?.signIn
     )?.fallbackViews?.auth?.signIn
 
     if (Fallback) {
