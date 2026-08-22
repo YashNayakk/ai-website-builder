@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+import logo from './buildora-logo.svg';
 
 export const assets = {
     logo,

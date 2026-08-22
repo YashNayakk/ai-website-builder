@@ -21,10 +21,10 @@ const Contact = () => {
             For account issues, billing questions, or general inquiries
           </p>
           <a
-            href='mailto:yashnayak1209@gmail.com'
+            href='mailto:nayakyash420@gmail.com'
             className='text-indigo-400 hover:text-indigo-300 transition-colors font-medium'
           >
-            yashnayak1209@gmail.com
+            nayakyash420@gmail.com
           </a>
         </div>
 

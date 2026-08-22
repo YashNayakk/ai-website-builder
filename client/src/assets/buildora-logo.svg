@@ -1,0 +1,16 @@
+<svg width="314" height="58" viewBox="0 0 314 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Buildora: abstract build/generation mark, no lettering inside the mark -->
+  <g transform="translate(1 1)">
+    <!-- foundation / blocks -->
+    <path d="M3 35.5L20.5 12H45.5L38.2 19.2H26.8L15.2 35.5H27.2L21.5 43.5H3Z" fill="white"/>
+    <path d="M27.2 35.5H48.5L41.3 43.5H21.5L27.2 35.5Z" fill="white"/>
+    <!-- upward construction beam -->
+    <path d="M38.8 8H54.5L45.3 19.2H37.2L38.8 8Z" fill="white"/>
+    <path d="M45.3 19.2H55L43.2 35.5H31.8L45.3 19.2Z" fill="white"/>
+    <!-- small spark: creation / AI / aura -->
+    <path d="M53.8 4.5L55.4 9.1L60 10.7L55.4 12.3L53.8 16.9L52.2 12.3L47.6 10.7L52.2 9.1L53.8 4.5Z" fill="white"/>
+  </g>
+
+  <!-- BUILDORA wordmark -->
+  <text x="72" y="40" fill="white" font-family="Inter, Arial, Helvetica, sans-serif" font-size="29" font-weight="750" letter-spacing="-0.8">BUILDORA</text>
+</svg>

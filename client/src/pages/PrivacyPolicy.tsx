@@ -9,7 +9,7 @@ const PrivacyPolicy = () => {
 
         <section className='mb-6'>
           <h2 className='text-xl font-semibold text-white mb-2'>Information We Collect</h2>
-          <p>We collect information you provide directly, such as your name, email address, and payment details when you create an account or purchase credits. We also collect usage data related to your use of our AI website builder service.</p>
+          <p>We collect information you provide directly, such as your name, email address, and payment details when you create an account or purchase credits. We also collect usage data related to your use of our Buildora service.</p>
         </section>
 
         <section className='mb-6'>
@@ -29,7 +29,7 @@ const PrivacyPolicy = () => {
 
         <section className='mb-6'>
           <h2 className='text-xl font-semibold text-white mb-2'>Contact Us</h2>
-          <p>For any questions about this Privacy Policy, contact us at <a href='mailto:yashnayak1209@gmail.com' className='text-indigo-400'>yashnayak1209@gmail.com</a>.</p>
+          <p>For any questions about this Privacy Policy, contact us at <a href='mailto:nayakyash420@gmail.com' className='text-indigo-400'>nayakyash420@gmail.com</a>.</p>
         </section>
       </div>
       <Footer />

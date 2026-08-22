@@ -27,7 +27,7 @@ const Footer = () => {
 
         {/* Brand */}
         <div className='max-w-xs'>
-          <h3 className='text-white font-semibold text-lg mb-2'>SiteBuilder</h3>
+          <h3 className='text-white font-semibold text-lg mb-2'>Buildora</h3>
           <p className='text-gray-400 text-sm leading-relaxed'>
             Turn thoughts into websites instantly with AI. Create, customize, and publish faster than ever.
           </p>
@@ -64,7 +64,7 @@ const Footer = () => {
 
       <div className='border-t border-white/10'>
         <p className='text-center text-gray-500 text-xs py-4'>
-          © {new Date().getFullYear()} AI Website Builder — Yash. All rights reserved.
+          © {new Date().getFullYear()} Buildora by orche. All rights reserved.
         </p>
       </div>
     </footer>

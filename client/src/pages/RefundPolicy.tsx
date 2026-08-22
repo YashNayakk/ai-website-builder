@@ -24,7 +24,7 @@ const RefundPolicy = () => {
 
         <section className='mb-6'>
           <h2 className='text-xl font-semibold text-white mb-2'>How to Request a Refund</h2>
-          <p>Contact us at <a href='mailto:yashnayak1209@gmail.com' className='text-indigo-400'>yashnayak1209@gmail.com</a> with your order ID and details of the issue. Refunds, when approved, are processed back to the original payment method via Razorpay.</p>
+          <p>Contact us at <a href='mailto:nayakyash420@gmail.com' className='text-indigo-400'>nayakyash420@gmail.com</a> with your order ID and details of the issue. Refunds, when approved, are processed back to the original payment method via Razorpay.</p>
         </section>
       </div>
       <Footer />

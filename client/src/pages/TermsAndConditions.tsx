@@ -9,7 +9,7 @@ const TermsAndConditions = () => {
 
         <section className='mb-6'>
           <h2 className='text-xl font-semibold text-white mb-2'>Use of Service</h2>
-          <p>By using our AI Website Builder, you agree to use the platform only for lawful purposes and in accordance with these terms.</p>
+          <p>By using our Buildora, you agree to use the platform only for lawful purposes and in accordance with these terms.</p>
         </section>
 
         <section className='mb-6'>
