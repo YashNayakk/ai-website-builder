@@ -17,6 +17,9 @@ export const auth = betterAuth({
         requireEmailVerification: true,
 
         sendResetPassword: async ({ user, url }) => {
+            const token = new URL(url).searchParams.get('token');
+            const frontendUrl = `${process.env.TRUSTED_URL}/auth/reset-password?token=${token}`;
+
             await resend.emails.send({
                 from: 'Buildora by orche <onboarding@resend.dev>', // swap to your verified domain later
                 to: user.email,
@@ -25,7 +28,7 @@ export const auth = betterAuth({
                     <div style="font-family: sans-serif; padding: 20px;">
                         <h2>Reset your password</h2>
                         <p>Click the link below to set a new password. This link expires shortly, so use it soon.</p>
-                        <a href="${url}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;">Reset Password</a>
+                        <a href="${frontendUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;">Reset Password</a>
                         <p>If you didn't request this, you can safely ignore this email.</p>
                     </div>
                 `,
@@ -37,22 +40,31 @@ export const auth = betterAuth({
         sendOnSignUp: true,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }) => {
-            await resend.emails.send({
-                from: 'Buildora by orche <onboarding@resend.dev>',
-                to: user.email,
-                subject: 'Verify your email address',
-                html: `
+            const token = new URL(url).searchParams.get('token');
+            const frontendUrl = `${process.env.TRUSTED_URL}/auth/verify-email?token=${token}`;
+
+            try {
+                await resend.emails.send({
+                    from: 'Buildora by orche <onboarding@resend.dev>',
+                    to: user.email,
+                    subject: 'Verify your email address',
+                    html: `
                     <div style="font-family: sans-serif; padding: 20px;">
                         <h2>Verify your email</h2>
                         <p>Click the link below to verify your email address:</p>
-                        <a href="${url}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;">Verify Email</a>
+                        <a href="${frontendUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;">Verify Email</a>
                         <p>If you didn't create an account, you can ignore this email.</p>
                     </div>
                 `,
-            });
+                });
+                console.log('Verification email sent to', user.email);
+            } catch (err) {
+                console.error('FAILED to send verification email:', err);
+            }
+
         },
     },
-    
+
     trustedOrigins,
     baseURL: process.env.BETTER_AUTH_URL!,
     secret: process.env.BETTER_AUTH_SECRET!,
@@ -64,7 +76,7 @@ export const auth = betterAuth({
                     httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-                    path: '/', 
+                    path: '/',
                 }
             }
         }
