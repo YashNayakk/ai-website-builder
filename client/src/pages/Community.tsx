@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Project } from '../types';
 import { Loader2Icon } from 'lucide-react';
-import { Link , useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import api from '@/configs/axios';
 import { toast } from 'sonner';
@@ -13,11 +13,11 @@ const Community = () => {
 
   const fetchProjects = async () => {
     try {
-      const {data} = await api.get('api/project/published');
-      
+      const { data } = await api.get('api/project/published');
+
       setProjects(data.project);
       setLoading(false);
-    } catch(error: any){
+    } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.message || 'Failed to fetch projects');
     }
@@ -74,16 +74,21 @@ const Community = () => {
                     </div>
                     <p className='line-clamp-2 text-gray-400 mt-1 text-sm'>{project.initial_prompt}</p>
 
-                    <div
+                    <div onClick={(e) => e.stopPropagation()}
                       className='flex justify-between items-center mt-6'>
                       <span className='text-xs text-gray-500'>
                         {new Date(project.createdAt).toLocaleDateString()}
                       </span>
                       <div className='flex gap-3 text-white text-sm'>
-                        <button onClick={() => navigate(`/preview/${project.id}`)} className='px-3 py-1.5 bg-white/10 
+                        <button onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          navigate(`/preview/${project.id}`)
+                        }}
+                          className='px-3 py-1.5 bg-white/10 
                        hover:bg-white/15 rounded-md transition-colors flex items-center gap-2 '>
                           <span
-                          className='bg-gray-200 size-4.5 rounded-full text-black
+                            className='bg-gray-200 size-4.5 rounded-full text-black
                           font-semibold flex items-center justify-center'
                           >{project.user?.name?.slice(0, 1)}</span>
                           {project.user?.name}
@@ -92,7 +97,7 @@ const Community = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                 </Link>
               )
               )}
