@@ -40,8 +40,6 @@ export const auth = betterAuth({
         sendOnSignUp: true,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }) => {
-            const token = new URL(url).searchParams.get('token');
-            const frontendUrl = `${process.env.TRUSTED_URL}/auth/verify-email?token=${token}`;
 
             try {
                 await resend.emails.send({
@@ -52,7 +50,7 @@ export const auth = betterAuth({
                     <div style="font-family: sans-serif; padding: 20px;">
                         <h2>Verify your email</h2>
                         <p>Click the link below to verify your email address:</p>
-                        <a href="${frontendUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;">Verify Email</a>
+                        <a href="${url}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;">Verify Email</a>
                         <p>If you didn't create an account, you can ignore this email.</p>
                     </div>
                 `,
